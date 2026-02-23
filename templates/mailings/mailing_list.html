@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Список рассылок{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Рассылки</h1>
+    <a href="{% url 'mailings:mailing_create' %}" class="btn btn-primary">Создать рассылку</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Сообщение</th>
+                <th>Дата начала</th>
+                <th>Дата окончания</th>
+                <th>Статус</th>
+                <th>Получателей</th>
+                <th>Владелец</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mailing in mailings %}
+            <tr>
+                <td>{{ mailing.id }}</td>
+                <td>{{ mailing.message.subject|truncatechars:50 }}</td>
+                <td>{{ mailing.start_time|date:"d.m.Y H:i" }}</td>
+                <td>{{ mailing.end_time|date:"d.m.Y H:i" }}</td>
+                <td>
+                    {% if mailing.status == 'created' %}
+                        <span class="badge bg-warning">Создана</span>
+                    {% elif mailing.status == 'running' %}
+                        <span class="badge bg-success">Запущена</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Завершена</span>
+                    {% endif %}
+                </td>
+                <td>{{ mailing.recipients.count }}</td>
+                <td>{{ mailing.owner.email|default:"-" }}</td>
+                <td>
+                    <a href="{% url 'mailings:mailing_edit' mailing.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                    <a href="{% url 'mailings:mailing_delete' mailing.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                    {% if mailing.status == 'running' %}
+                    <a href="{% url 'mailings:send_mailing' mailing.pk %}" class="btn btn-sm btn-success">Отправить</a>
+                    {% endif %}
+                    <a href="{% url 'mailings:mailing_attempts' mailing.pk %}" class="btn btn-sm btn-info">Попытки</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center">Нет рассылок</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

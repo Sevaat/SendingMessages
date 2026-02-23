@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Удаление получателя{% endblock %}
+{% block title %}Удаление сообщения{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -10,14 +10,14 @@
                 <h3 class="text-center">Подтверждение удаления</h3>
             </div>
             <div class="card-body">
-                <p class="lead">Вы уверены, что хотите удалить получателя "{{ recipient.full_name }}" ({{ recipient.email }})?</p>
+                <p class="lead">Вы уверены, что хотите удалить сообщение "{{ message.subject }}"?</p>
                 <p class="text-muted">Это действие нельзя отменить.</p>
 
                 <form method="post">
                     {% csrf_token %}
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-danger">Удалить</button>
-                        <a href="{% url 'mailings:recipient_list' %}" class="btn btn-secondary">Отмена</a>
+                        <a href="{% url 'mailings:message_list' %}" class="btn btn-secondary">Отмена</a>
                     </div>
                 </form>
             </div>

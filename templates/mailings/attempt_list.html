@@ -1,12 +1,15 @@
 {% extends 'base.html' %}
 
+{% block title %}Попытки рассылок{% endblock %}
+
 {% block content %}
 <h1 class="mb-4">Все попытки рассылок</h1>
 
 <div class="table-responsive">
-    <table class="table table-striped">
+    <table class="table table-striped table-hover">
         <thead>
             <tr>
+                <th>ID</th>
                 <th>Рассылка</th>
                 <th>Дата и время</th>
                 <th>Статус</th>
@@ -17,27 +20,30 @@
         <tbody>
             {% for attempt in attempts %}
             <tr>
+                <td>{{ attempt.id }}</td>
                 <td>
                     <a href="{% url 'mailings:mailing_attempts' attempt.mailing.pk %}">
-                        {{ attempt.mailing.message.subject }}
+                        {{ attempt.mailing.message.subject|truncatechars:50 }}
                     </a>
                 </td>
                 <td>{{ attempt.attempt_time|date:"d.m.Y H:i:s" }}</td>
                 <td>
-                    <span class="badge {% if attempt.status == 'success' %}bg-success{% else %}bg-danger{% endif %}">
-                        {{ attempt.get_status_display }}
-                    </span>
+                    {% if attempt.status == 'success' %}
+                        <span class="badge bg-success">Успешно</span>
+                    {% else %}
+                        <span class="badge bg-danger">Не успешно</span>
+                    {% endif %}
                 </td>
-                <td>{{ attempt.server_response|truncatechars:50 }}</td>
+                <td>{{ attempt.server_response|truncatechars:100 }}</td>
                 <td>
                     <a href="{% url 'mailings:mailing_attempts' attempt.mailing.pk %}" class="btn btn-sm btn-info">
-                        Детали
+                        Детали рассылки
                     </a>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="5" class="text-center">Нет попыток отправки</td>
+                <td colspan="6" class="text-center">Нет попыток отправки</td>
             </tr>
             {% endfor %}
         </tbody>
