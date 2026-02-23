@@ -4,26 +4,27 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
-from django.utils import timezone
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import EmailMessage
 from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
+from django.core.paginator import Paginator
+from django.db.models import Q, Count
+from django.utils import timezone
 from .forms import UserRegistrationForm, UserLoginForm, UserProfileForm
 from .models import User
 from .tokens import account_activation_token
-from django.db.models import Count, Q
-from mailings.models import MailingAttempt, Mailing
-from django.contrib.admin.views.decorators import staff_member_required
-from django.core.paginator import Paginator
+from mailings.models import Mailing, MailingAttempt, Recipient
 
 
 def register(request):
+    """Регистрация нового пользователя"""
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False
+            user.is_active = False  # Пользователь неактивен до подтверждения email
             user.save()
 
             # Отправка email для подтверждения
@@ -47,6 +48,7 @@ def register(request):
 
 
 def activate(request, uidb64, token):
+    """Активация аккаунта по ссылке из email"""
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
@@ -66,6 +68,7 @@ def activate(request, uidb64, token):
 
 
 def user_login(request):
+    """Вход пользователя в систему"""
     if request.method == 'POST':
         form = UserLoginForm(data=request.POST)
         if form.is_valid():
@@ -77,10 +80,43 @@ def user_login(request):
                 messages.error(request, 'Ваш аккаунт заблокирован. Обратитесь к администратору')
                 return redirect('users:login')
             login(request, user)
+
+            # Обновляем время последней активности
+            user.last_activity = timezone.now()
+            user.save(update_fields=['last_activity'])
+
+            messages.success(request, f'Добро пожаловать, {user.email}!')
             return redirect('mailings:home')
     else:
         form = UserLoginForm()
     return render(request, 'users/login.html', {'form': form})
+
+
+def user_logout(request):
+    """Выход пользователя из системы"""
+    logout(request)
+    messages.success(request, 'Вы успешно вышли из системы')
+    return redirect('mailings:home')
+
+
+@login_required
+def profile(request):
+    """Просмотр профиля пользователя"""
+    return render(request, 'users/profile.html', {'user': request.user})
+
+
+@login_required
+def profile_edit(request):
+    """Редактирование профиля пользователя"""
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Профиль успешно обновлен')
+            return redirect('users:profile')
+    else:
+        form = UserProfileForm(instance=request.user)
+    return render(request, 'users/profile_edit.html', {'form': form})
 
 
 @staff_member_required
