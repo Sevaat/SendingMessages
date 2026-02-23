@@ -11,6 +11,9 @@ python-dotenv = "^1.2.1"
 django = "^6.0.2"
 psycopg2-binary = "^2.9.11"
 pillow = "^12.1.1"
+django-crispy-forms = "^2.5"
+crispy-bootstrap5 = "^2025.6"
+redis = "^7.2.0"
 
 [tool.poetry.group.lint.dependencies]
 flake8 = "^7.3.0"

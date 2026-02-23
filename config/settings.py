@@ -18,6 +18,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'django.contrib.sites',
+    'crispy_forms',
+    'crispy_bootstrap5',
     'users',
     'mailings',
 ]
@@ -103,6 +106,7 @@ EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'True'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 CACHES = {
     'default': {
@@ -112,3 +116,14 @@ CACHES = {
 }
 
 CACHE_MIDDLEWARE_SECONDS = 300
+
+SITE_ID = 1
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
