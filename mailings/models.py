@@ -102,3 +102,22 @@ class MailingAttempt(models.Model):
 
     def __str__(self):
         return f"Попытка #{self.id} - {self.get_status_display()} - {self.attempt_time}"
+
+    @property
+    def success_attempts_count(self):
+        return self.attempts.filter(status='success').count()
+
+    @property
+    def failed_attempts_count(self):
+        return self.attempts.filter(status='failed').count()
+
+    @property
+    def total_attempts_count(self):
+        return self.attempts.count()
+
+    @property
+    def success_rate(self):
+        total = self.total_attempts_count
+        if total == 0:
+            return 0
+        return (self.success_attempts_count / total) * 100
