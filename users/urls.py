@@ -34,4 +34,9 @@ urlpatterns = [
              template_name='users/password_reset_complete.html'
          ),
          name='password_reset_complete'),
+
+    path('users/', views.user_list, name='user_list'),
+    path('users/<int:pk>/', views.user_detail, name='user_detail'),
+    path('users/<int:pk>/toggle-block/', views.toggle_user_block, name='toggle_user_block'),
+    path('users/<int:pk>/disable-mailings/', views.disable_user_mailings, name='disable_user_mailings'),
 ]
