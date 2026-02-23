@@ -1,17 +1,23 @@
+from django.core.cache import cache
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
+
 from .models import Message, Recipient, Mailing, MailingAttempt
 from .forms import MessageForm, RecipientForm, MailingForm
 from django.core.mail import send_mail
 from django.conf import settings
-from django.db.models import Count, Q, Avg
+from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
 
 
 # Главная страница
+@cache_page(60 * 15)
+@vary_on_cookie
 def home(request):
     total_mailings = Mailing.objects.count()
     active_mailings = Mailing.objects.filter(
@@ -141,10 +147,16 @@ def recipient_delete(request, pk):
 # CRUD для рассылок
 @login_required
 def mailing_list(request):
-    if request.user.has_perm('mailings.can_view_all_mailings'):
-        mailings = Mailing.objects.all()
-    else:
-        mailings = Mailing.objects.filter(owner=request.user)
+    cache_key = f'mailing_list_user_{request.user.id}'
+    mailings = cache.get(cache_key)
+    if not mailings:
+        if request.user.has_perm('mailings.can_view_all_mailings'):
+            mailings = Mailing.objects.all().select_related('message', 'owner')
+        else:
+            mailings = Mailing.objects.filter(owner=request.user).select_related('message')
+
+        cache.set(cache_key, mailings, 300)
+
     return render(request, 'mailings/mailing_list.html', {'mailings': mailings})
 
 
@@ -264,6 +276,7 @@ def attempt_list(request):
     return render(request, 'mailings/attempt_list.html', {'attempts': attempts})
 
 
+@cache_page(60 * 5)
 @login_required
 def user_statistics(request):
     """Статистика для текущего пользователя"""
@@ -358,3 +371,9 @@ def mailing_statistics(request, pk):
     }
 
     return render(request, 'mailings/mailing_statistics.html', context)
+
+def invalidate_user_cache(user_id):
+    """Инвалидация кеша пользователя"""
+    cache.delete(f'mailing_list_user_{user_id}')
+    cache.delete(f'recipient_list_user_{user_id}')
+    cache.delete(f'message_list_user_{user_id}')
