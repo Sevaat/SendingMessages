@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Пользователь {{ target_user.email }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Профиль пользователя</h1>
+        <a href="{% url 'users:user_list' %}" class="btn btn-secondary">Назад к списку</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Информация</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        {% if target_user.avatar %}
+                        <img src="{{ target_user.avatar.url }}" class="rounded-circle img-fluid" style="max-width: 150px;">
+                        {% else %}
+                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px;">
+                            <span style="font-size: 3rem;">{{ target_user.email|first|upper }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <table class="table">
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ target_user.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Телефон:</th>
+                            <td>{{ target_user.phone|default:"Не указан" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Страна:</th>
+                            <td>{{ target_user.country|default:"Не указана" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Статус:</th>
+                            <td>
+                                {% if target_user.is_blocked %}
+                                    <span class="badge bg-danger">Заблокирован</span>
+                                {% elif not target_user.is_verified %}
+                                    <span class="badge bg-warning">Не подтвержден</span>
+                                {% elif not target_user.is_active %}
+                                    <span class="badge bg-secondary">Неактивен</span>
+                                {% else %}
+                                    <span class="badge bg-success">Активен</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Дата регистрации:</th>
+                            <td>{{ target_user.date_joined|date:"d.m.Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Последняя активность:</th>
+                            <td>{{ target_user.last_activity|date:"d.m.Y H:i" }}</td>
+                        </tr>
+                    </table>
+
+                    {% if perms.users.can_block_user %}
+                    <form method="post" action="{% url 'users:toggle_user_block' target_user.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        {% if target_user.is_blocked %}
+                        <button type="submit" class="btn btn-success">Разблокировать</button>
+                        {% else %}
+                        <button type="submit" class="btn btn-warning">Заблокировать</button>
+                        {% endif %}
+                    </form>
+
+                    <form method="post" action="{% url 'users:disable_user_mailings' target_user.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Отключить все рассылки</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Статистика</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card text-white bg-primary">
+                                <div class="card-body">
+                                    <h6>Всего рассылок</h6>
+                                    <p class="display-6">{{ total_mailings }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-white bg-success">
+                                <div class="card-body">
+                                    <h6>Активных</h6>
+                                    <p class="display-6">{{ active_mailings }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-white bg-info">
+                                <div class="card-body">
+                                    <h6>Всего попыток</h6>
+                                    <p class="display-6">{{ total_attempts }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Успешных попыток: {{ success_attempts }}</h6>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" role="progressbar"
+                                             style="width: {% if total_attempts %}{{ success_attempts|floatformat:0 }}{% else %}0{% endif %}%">
+                                            {% if total_attempts %}{{ success_attempts|floatformat:0 }}%{% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Неуспешных попыток: {{ failed_attempts }}</h6>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-danger" role="progressbar"
+                                             style="width: {% if total_attempts %}{{ failed_attempts|floatformat:0 }}{% else %}0{% endif %}%">
+                                            {% if total_attempts %}{{ failed_attempts|floatformat:0 }}%{% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5>Последние рассылки</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Сообщение</th>
+                                <th>Статус</th>
+                                <th>Дата начала</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mailing in target_user.mailings.all|slice:":5" %}
+                            <tr>
+                                <td>{{ mailing.id }}</td>
+                                <td>{{ mailing.message.subject|truncatechars:50 }}</td>
+                                <td>
+                                    {% if mailing.status == 'created' %}
+                                        <span class="badge bg-warning">Создана</span>
+                                    {% elif mailing.status == 'running' %}
+                                        <span class="badge bg-success">Запущена</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Завершена</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ mailing.start_time|date:"d.m.Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">Нет рассылок</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
