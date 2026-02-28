@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Моя статистика{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Моя статистика</h1>
+
+    <!-- Основные показатели -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Всего рассылок</h5>
+                    <p class="card-text display-6">{{ total_mailings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Активных рассылок</h5>
+                    <p class="card-text display-6">{{ active_mailings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Всего получателей</h5>
+                    <p class="card-text display-6">{{ total_recipients }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Успешность</h5>
+                    <p class="card-text display-6">{{ success_rate }}%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Детальная статистика попыток -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Статистика попыток</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="attemptsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Динамика за неделю</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="dailyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Топ рассылок -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Лучшие рассылки</h5>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Рассылка</th>
+                        <th>Всего попыток</th>
+                        <th>Успешно</th>
+                        <th>Успешность</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mailing in top_mailings %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'mailings:mailing_statistics' mailing.pk %}">
+                                {{ mailing.message.subject|truncatechars:50 }}
+                            </a>
+                        </td>
+                        <td>{{ mailing.attempts_count }}</td>
+                        <td>{{ mailing.success_count }}</td>
+                        <td>
+                            {% if mailing.attempts_count %}
+                                {{ mailing.success_count|floatformat:0 }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // График попыток
+    const ctx1 = document.getElementById('attemptsChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+            labels: ['Успешно ({{ success_attempts }})', 'Неуспешно ({{ failed_attempts }})'],
+            datasets: [{
+                data: [{{ success_attempts }}, {{ failed_attempts }}],
+                backgroundColor: ['#28a745', '#dc3545']
+            }]
+        }
+    });
+
+    // Дневная статистика
+    const ctx2 = document.getElementById('dailyChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: [{% for stat in daily_stats %}'{{ stat.date }}',{% endfor %}],
+            datasets: [{
+                label: 'Успешно',
+                data: [{% for stat in daily_stats %}{{ stat.success }},{% endfor %}],
+                borderColor: '#28a745',
+                tension: 0.1
+            }, {
+                label: 'Неуспешно',
+                data: [{% for stat in daily_stats %}{{ stat.failed }},{% endfor %}],
+                borderColor: '#dc3545',
+                tension: 0.1
+            }]
+        }
+    });
+</script>
+{% endblock %}

@@ -28,4 +28,8 @@ urlpatterns = [
 
     # Попытки (общий список)
     path('attempts/', views.attempt_list, name='attempt_list'),
+
+    # Статистика
+    path('statistics/', views.user_statistics, name='user_statistics'),
+    path('mailings/<int:pk>/statistics/', views.mailing_statistics, name='mailing_statistics'),
 ]

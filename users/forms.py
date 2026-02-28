@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordResetForm
 from .models import User
 
 
@@ -26,6 +26,14 @@ class UserRegistrationForm(UserCreationForm):
             'country': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Россия'}),
         }
 
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.is_active = False  # Пользователь неактивен до подтверждения email
+        user.is_verified = False
+        if commit:
+            user.save()
+        return user
+
 
 class UserLoginForm(AuthenticationForm):
     username = forms.EmailField(
@@ -48,3 +56,10 @@ class UserProfileForm(forms.ModelForm):
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
             'country': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+
+class CustomPasswordResetForm(PasswordResetForm):
+    email = forms.EmailField(
+        label='Email',
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
