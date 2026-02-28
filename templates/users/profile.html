@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль пользователя{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Профиль пользователя</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" class="img-fluid rounded-circle mb-3" style="max-width: 200px;" alt="Avatar">
+                        {% else %}
+                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 200px; height: 200px;">
+                            <span style="font-size: 4rem;">{{ user.email|first|upper }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-8">
+                        <table class="table">
+                            <tr>
+                                <th>Email:</th>
+                                <td>{{ user.email }}</td>
+                            </tr>
+                            <tr>
+                                <th>Телефон:</th>
+                                <td>{{ user.phone|default:"Не указан" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Страна:</th>
+                                <td>{{ user.country|default:"Не указана" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Дата регистрации:</th>
+                                <td>{{ user.date_joined|date:"d.m.Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Последний вход:</th>
+                                <td>{{ user.last_login|date:"d.m.Y H:i"|default:"Никогда" }}</td>
+                            </tr>
+                        </table>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'users:profile_edit' %}" class="btn btn-primary">Редактировать профиль</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Удаление рассылки{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h3 class="text-center">Подтверждение удаления</h3>
+            </div>
+            <div class="card-body">
+                <p class="lead">Вы уверены, что хотите удалить рассылку #{{ mailing.id }}?</p>
+                <p><strong>Сообщение:</strong> {{ mailing.message.subject }}</p>
+                <p><strong>Период:</strong> с {{ mailing.start_time|date:"d.m.Y H:i" }} по {{ mailing.end_time|date:"d.m.Y H:i" }}</p>
+                <p><strong>Получателей:</strong> {{ mailing.recipients.count }}</p>
+                <p class="text-muted">Это действие нельзя отменить.</p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger">Удалить</button>
+                        <a href="{% url 'mailings:mailing_list' %}" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
